@@ -4,6 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Worship Flow - Music App</title>
+    
+    <!-- Google Fonts (Kantumruy Pro) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
     <script>
@@ -12,182 +19,126 @@
             theme: {
                 extend: {
                     colors: {
-                        brand: '#fa586a', // Apple Music-ish pink/red
+                        brand: '#fa586a', 
                         darkbg: '#000000',
                         darksurface: '#1c1c1e',
                     },
                     fontFamily: {
-                        sans: ['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+                        sans: ['"Kantumruy Pro"', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
                     }
                 }
             }
         }
     </script>
     <style>
-        /* Custom Styles for App-like feel */
         body {
             -webkit-tap-highlight-color: transparent;
             overscroll-behavior-y: none;
+            line-height: 1.5; 
         }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         
-        .hide-scrollbar::-webkit-scrollbar {
-            display: none;
-        }
-        .hide-scrollbar {
-            -ms-overflow-style: none;
-            scrollbar-width: none;
-        }
-
-        /* Glassmorphism */
         .glass {
             background: rgba(255, 255, 255, 0.85);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
-        .dark .glass {
-            background: rgba(28, 28, 30, 0.85);
-        }
+        .dark .glass { background: rgba(28, 28, 30, 0.85); }
 
-        /* Chord Rendering */
-        .chord-line {
-            display: flex;
-            flex-wrap: wrap;
-            margin-bottom: 0.5rem;
-            line-height: 2.5;
-        }
-        .chord-group {
-            display: inline-flex;
-            flex-direction: column;
-            position: relative;
-            margin-right: 2px;
-        }
-        .chord-name {
-            position: absolute;
-            top: -1.2rem;
-            font-weight: 700;
-            color: #fa586a;
-            font-size: 0.85rem;
-            white-space: nowrap;
-        }
-        .dark .chord-name {
-            color: #ff6b7d;
-        }
-        .lyric-text {
-            min-height: 1.5rem;
-            white-space: pre;
-        }
-        
-        /* Hide Chords Setting */
-        .hide-chords .chord-name { display: none; }
-        .hide-chords .chord-line { line-height: 1.5; margin-bottom: 0.25rem; }
-
-        /* Range Slider Styling */
-        input[type=range] {
-            -webkit-appearance: none;
-            width: 100%;
-            background: transparent;
-        }
+        input[type=range] { -webkit-appearance: none; width: 100%; background: transparent; }
         input[type=range]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            height: 12px;
-            width: 12px;
-            border-radius: 50%;
-            background: #fa586a;
-            cursor: pointer;
-            margin-top: -4px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            -webkit-appearance: none; height: 12px; width: 12px; border-radius: 50%;
+            background: #fa586a; cursor: pointer; margin-top: -4px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
         input[type=range]::-webkit-slider-runnable-track {
-            width: 100%;
-            height: 4px;
-            cursor: pointer;
-            background: #e5e7eb;
-            border-radius: 2px;
+            width: 100%; height: 4px; cursor: pointer; background: #e5e7eb; border-radius: 2px;
         }
-        .dark input[type=range]::-webkit-slider-runnable-track {
-            background: #374151;
-        }
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #374151; }
 
-        /* Player Expansion Animation */
-        #expanded-player {
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .player-hidden {
-            transform: translateY(100%);
-        }
-        .player-visible {
-            transform: translateY(0);
-        }
+        #expanded-player { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); }
+        .player-hidden { transform: translateY(100%); }
+        .player-visible { transform: translateY(0); }
     </style>
 </head>
 <body class="bg-gray-50 text-gray-900 dark:bg-darkbg dark:text-white h-screen flex flex-col overflow-hidden selection:bg-brand selection:text-white">
 
-    <!-- App Container -->
     <div class="flex-1 flex overflow-hidden relative">
-        
-        <!-- Sidebar Navigation (Desktop) -->
-        <nav class="hidden md:flex w-64 glass border-r border-gray-200 dark:border-gray-800 flex-col py-6 px-4 z-20">
-            <div class="text-2xl font-bold tracking-tight mb-8 text-brand flex items-center gap-2">
-                <i class="ph-fill ph-music-notes"></i> WorshipFlow
-            </div>
-            <div class="space-y-1">
-                <button onclick="navTo('home')" id="nav-home" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-800 text-brand bg-gray-200 dark:bg-gray-800">
-                    <i class="ph ph-house text-xl"></i> Home
-                </button>
-                <button onclick="navTo('songs')" id="nav-songs" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-800">
-                    <i class="ph ph-music-note text-xl"></i> Songs
-                </button>
-                <button onclick="navTo('albums')" id="nav-albums" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-800">
-                    <i class="ph ph-vinyl-record text-xl"></i> Albums
-                </button>
-                <button onclick="navTo('settings')" id="nav-settings" class="nav-item w-full flex items-center gap-3 px-4 py-2 rounded-lg text-left font-medium transition-colors hover:bg-gray-200 dark:hover:bg-gray-800">
-                    <i class="ph ph-gear text-xl"></i> Settings
-                </button>
-            </div>
-        </nav>
-
-        <!-- Main Content Area -->
-        <main class="flex-1 overflow-y-auto pb-32 hide-scrollbar relative" id="main-content">
+        <main class="flex-1 overflow-y-auto pb-32 hide-scrollbar relative w-full" id="main-content">
             
             <!-- Home View -->
-            <div id="view-home" class="view-section p-6 md:p-10 animate-fade-in block">
-                <h1 class="text-3xl font-bold mb-6">Listen Now</h1>
+            <div id="view-home" class="view-section p-6 animate-fade-in block">
+                <h1 class="text-3xl font-bold mb-1 mt-4" id="home-greeting">Listen Now</h1>
+                <p class="text-gray-500 mb-6 text-sm dark:text-gray-400" id="home-subtitle">Welcome to your music</p>
                 
+                <div id="home-actions" class="flex gap-3 mb-8 hidden">
+                    <button onclick="shuffleAll()" class="flex-1 bg-brand text-white py-3 rounded-xl font-medium shadow-md active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <i class="ph-fill ph-shuffle"></i> Shuffle
+                    </button>
+                    <button onclick="playLatest()" class="flex-1 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white py-3 rounded-xl font-medium active:scale-95 transition-transform flex items-center justify-center gap-2">
+                        <i class="ph-fill ph-play"></i> Play
+                    </button>
+                </div>
+
                 <div class="mb-8">
-                    <h2 class="text-xl font-semibold mb-4 text-gray-500 dark:text-gray-400">Recently Added</h2>
-                    <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4" id="home-recent-grid">
-                        <!-- Populated by JS -->
+                    <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white" id="recent-title">Recently Added</h2>
+                    <div class="grid grid-cols-2 gap-4" id="home-recent-grid"></div>
+
+                    <div id="home-empty-state" class="flex flex-col items-center justify-center py-12 px-4 bg-gray-100 dark:bg-gray-800/50 rounded-2xl border-2 border-dashed border-gray-300 dark:border-gray-700 mt-4">
+                        <div class="bg-gray-200 dark:bg-gray-700 p-4 rounded-full mb-4">
+                            <i class="ph ph-music-notes text-4xl text-gray-400 dark:text-gray-300"></i>
+                        </div>
+                        <h3 class="font-semibold text-lg mb-2 text-gray-900 dark:text-white">No Music Yet</h3>
+                        <p class="text-sm text-gray-500 text-center mb-6">Import songs directly from your phone to start listening.</p>
+                        <button onclick="document.getElementById('file-upload').click()" class="bg-brand text-white px-6 py-2.5 rounded-full font-medium shadow-md active:scale-95 transition-transform flex items-center gap-2">
+                            <i class="ph ph-plus-circle text-lg"></i> Import Music
+                        </button>
                     </div>
                 </div>
             </div>
 
             <!-- Songs View -->
-            <div id="view-songs" class="view-section p-6 md:p-10 hidden">
-                <div class="flex justify-between items-center mb-6">
+            <div id="view-songs" class="view-section p-6 hidden">
+                <div class="flex justify-between items-center mb-6 mt-4">
                     <h1 class="text-3xl font-bold">Songs</h1>
-                    <button onclick="openSongModal()" class="bg-brand text-white px-4 py-2 rounded-full font-medium shadow-md hover:scale-105 transition-transform flex items-center gap-2">
-                        <i class="ph ph-plus-circle text-lg"></i> Add Song
+                    <input type="file" id="file-upload" accept="audio/*" multiple class="hidden" onchange="importSongs(event)">
+                    <button onclick="document.getElementById('file-upload').click()" class="bg-brand text-white px-4 py-2 rounded-full font-medium shadow-md active:scale-95 transition-transform flex items-center gap-2">
+                        <i class="ph ph-plus-circle text-lg"></i> Import
                     </button>
                 </div>
-                
-                <div class="space-y-2" id="songs-list">
-                    <!-- Populated by JS -->
-                </div>
+                <div class="space-y-2" id="songs-list"></div>
             </div>
 
             <!-- Albums View -->
-            <div id="view-albums" class="view-section p-6 md:p-10 hidden">
-                <h1 class="text-3xl font-bold mb-6">Albums</h1>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6" id="albums-grid">
-                    <!-- Populated by JS -->
+            <div id="view-albums" class="view-section p-6 hidden">
+                <div class="flex justify-between items-center mb-6 mt-4">
+                    <h1 class="text-3xl font-bold">Albums</h1>
+                    <button onclick="promptCreateAlbum()" class="bg-brand text-white px-4 py-2 rounded-full font-medium shadow-md active:scale-95 transition-transform flex items-center gap-2">
+                        <i class="ph ph-plus-circle text-lg"></i> New Album
+                    </button>
                 </div>
+                <div class="grid grid-cols-2 gap-6" id="albums-grid"></div>
+            </div>
+
+            <!-- Specific Album Detail View -->
+            <div id="view-album-detail" class="view-section p-6 hidden">
+                <button onclick="navTo('albums')" class="mb-4 flex items-center gap-2 text-brand font-medium active:scale-95 transition-transform">
+                    <i class="ph-bold ph-caret-left text-xl"></i> Back
+                </button>
+                <div class="flex justify-between items-center mb-6">
+                    <h1 class="text-2xl font-bold truncate" id="album-detail-title">Album</h1>
+                    <input type="file" id="album-file-upload" accept="audio/*" multiple class="hidden" onchange="importToCurrentAlbum(event)">
+                    <button onclick="document.getElementById('album-file-upload').click()" class="bg-brand text-white px-4 py-2 rounded-full font-medium shadow-md active:scale-95 transition-transform flex items-center gap-2 shrink-0">
+                        <i class="ph ph-download-simple text-lg"></i> Import
+                    </button>
+                </div>
+                <div class="space-y-2" id="album-songs-list"></div>
             </div>
 
             <!-- Settings View -->
-            <div id="view-settings" class="view-section p-6 md:p-10 hidden">
-                <h1 class="text-3xl font-bold mb-6">Settings</h1>
-                
-                <div class="max-w-2xl bg-white dark:bg-darksurface rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
+            <div id="view-settings" class="view-section p-6 hidden">
+                <h1 class="text-3xl font-bold mb-6 mt-4">Settings</h1>
+                <div class="w-full bg-white dark:bg-darksurface rounded-2xl shadow-sm border border-gray-100 dark:border-gray-800 overflow-hidden">
                     <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
                         <div>
                             <div class="font-medium">Dark Mode</div>
@@ -198,91 +149,39 @@
                             <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
                         </label>
                     </div>
-
-                    <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center">
-                        <div>
-                            <div class="font-medium">Show Chords by Default</div>
-                            <div class="text-sm text-gray-500">Display chords above lyrics</div>
-                        </div>
-                        <label class="relative inline-flex items-center cursor-pointer">
-                            <input type="checkbox" id="chords-toggle" class="sr-only peer" checked onchange="toggleChordsPref()">
-                            <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-brand"></div>
-                        </label>
-                    </div>
-
                     <div class="p-4 flex justify-between items-center">
                         <div>
-                            <div class="font-medium text-red-500">Reset Application</div>
-                            <div class="text-sm text-gray-500">Clear all saved songs and settings</div>
+                            <div class="font-medium text-red-500">Clear Playlist</div>
+                            <div class="text-sm text-gray-500">Remove all imported songs</div>
                         </div>
-                        <button onclick="resetData()" class="px-4 py-2 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-lg font-medium hover:bg-red-200 transition-colors">
-                            Clear Data
-                        </button>
+                        <button onclick="resetData()" class="px-4 py-2 bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400 rounded-lg font-medium hover:bg-red-200 transition-colors">Clear</button>
                     </div>
                 </div>
             </div>
-
-            <!-- Lyrics & Chords Viewer (Hidden by default) -->
-            <div id="view-lyrics" class="view-section p-6 md:p-10 hidden pb-40">
-                <div class="max-w-3xl mx-auto">
-                    <button onclick="navBack()" class="mb-6 flex items-center gap-2 text-brand font-medium hover:opacity-80">
-                        <i class="ph-bold ph-caret-left"></i> Back
-                    </button>
-                    
-                    <div class="flex justify-between items-start mb-8">
-                        <div>
-                            <h1 class="text-4xl font-bold tracking-tight mb-2" id="viewer-title">Song Title</h1>
-                            <p class="text-xl text-gray-500 dark:text-gray-400" id="viewer-artist">Artist</p>
-                            <div class="flex gap-4 mt-3 text-sm text-gray-500">
-                                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">Key: <span id="viewer-key">C</span></span>
-                                <span class="bg-gray-200 dark:bg-gray-800 px-2 py-1 rounded">Tempo: <span id="viewer-tempo">72</span> bpm</span>
-                            </div>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="editCurrentSong()" class="p-2 rounded-full bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 transition">
-                                <i class="ph ph-pencil-simple text-xl"></i>
-                            </button>
-                            <button onclick="playCurrentViewedSong()" class="p-2 rounded-full bg-brand text-white shadow-lg hover:scale-105 transition">
-                                <i class="ph-fill ph-play text-xl"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="viewer-content" class="text-lg md:text-xl font-medium font-sans">
-                        <!-- Parsed lyrics/chords go here -->
-                    </div>
-                </div>
-            </div>
-
         </main>
     </div>
 
-    <!-- Bottom Navigation (Mobile) -->
-    <nav class="md:hidden glass border-t border-gray-200 dark:border-gray-800 fixed bottom-0 w-full z-30 pb-safe">
+    <!-- Bottom Navigation -->
+    <nav class="glass border-t border-gray-200 dark:border-gray-800 fixed bottom-0 w-full z-30 pb-safe">
         <div class="flex justify-around items-center p-2 h-16">
             <button onclick="navTo('home')" class="nav-item-mob flex flex-col items-center gap-1 text-brand w-1/4">
-                <i class="ph-fill ph-house text-2xl"></i>
-                <span class="text-[10px] font-medium">Home</span>
+                <i class="ph-fill ph-house text-2xl"></i><span class="text-[10px] font-medium">Home</span>
             </button>
             <button onclick="navTo('songs')" class="nav-item-mob flex flex-col items-center gap-1 text-gray-400 w-1/4">
-                <i class="ph ph-music-note text-2xl"></i>
-                <span class="text-[10px] font-medium">Songs</span>
+                <i class="ph ph-music-note text-2xl"></i><span class="text-[10px] font-medium">Songs</span>
             </button>
             <button onclick="navTo('albums')" class="nav-item-mob flex flex-col items-center gap-1 text-gray-400 w-1/4">
-                <i class="ph ph-vinyl-record text-2xl"></i>
-                <span class="text-[10px] font-medium">Albums</span>
+                <i class="ph ph-vinyl-record text-2xl"></i><span class="text-[10px] font-medium">Albums</span>
             </button>
             <button onclick="navTo('settings')" class="nav-item-mob flex flex-col items-center gap-1 text-gray-400 w-1/4">
-                <i class="ph ph-gear text-2xl"></i>
-                <span class="text-[10px] font-medium">Settings</span>
+                <i class="ph ph-gear text-2xl"></i><span class="text-[10px] font-medium">Settings</span>
             </button>
         </div>
     </nav>
 
-    <!-- Persistent Mini Player -->
-    <div class="fixed bottom-16 md:bottom-0 w-full md:w-[calc(100%-16rem)] md:ml-64 glass border-t border-gray-200 dark:border-gray-800 z-40 px-4 py-2 cursor-pointer group" onclick="toggleExpandedPlayer(true)">
-        <div class="flex items-center justify-between max-w-screen-xl mx-auto h-14">
-            
+    <!-- Mini Player -->
+    <div class="fixed bottom-16 w-full glass border-t border-gray-200 dark:border-gray-800 z-40 px-4 py-2 cursor-pointer group" onclick="toggleExpandedPlayer(true)">
+        <div class="flex items-center justify-between w-full h-14">
             <div class="flex items-center gap-3 flex-1 overflow-hidden">
                 <img id="mini-cover" src="https://placehold.co/100x100/eeeeee/cccccc?text=Music" alt="Cover" class="w-10 h-10 rounded-md object-cover shadow-sm">
                 <div class="truncate">
@@ -290,42 +189,29 @@
                     <div class="text-xs text-gray-500 truncate" id="mini-artist">--</div>
                 </div>
             </div>
-
             <div class="flex items-center gap-4 text-2xl" onclick="event.stopPropagation()">
-                <button onclick="playPrev()" class="text-gray-600 dark:text-gray-300 hover:text-brand transition"><i class="ph-fill ph-skip-back"></i></button>
-                <button onclick="togglePlay()" class="text-gray-900 dark:text-white hover:text-brand transition text-3xl"><i id="mini-play-btn" class="ph-fill ph-play-circle"></i></button>
-                <button onclick="playNext()" class="text-gray-600 dark:text-gray-300 hover:text-brand transition"><i class="ph-fill ph-skip-forward"></i></button>
+                <button onclick="playPrev()" class="text-gray-600 dark:text-gray-300 active:text-brand transition"><i class="ph-fill ph-skip-back"></i></button>
+                <button onclick="togglePlay()" class="text-gray-900 dark:text-white active:text-brand transition text-3xl"><i id="mini-play-btn" class="ph-fill ph-play-circle"></i></button>
+                <button onclick="playNext()" class="text-gray-600 dark:text-gray-300 active:text-brand transition"><i class="ph-fill ph-skip-forward"></i></button>
             </div>
-            
-            <!-- Progress Bar Mini -->
             <div class="absolute top-0 left-0 w-full h-[2px] bg-gray-200 dark:bg-gray-800">
                 <div id="mini-progress" class="h-full bg-brand w-0"></div>
             </div>
         </div>
     </div>
 
-    <!-- Expanded Player (Full Screen Modal) -->
+    <!-- Expanded Player -->
     <div id="expanded-player" class="fixed inset-0 z-50 bg-white dark:bg-darkbg flex flex-col player-hidden">
-        
-        <!-- Header -->
         <div class="flex justify-between items-center p-6 mt-safe">
-            <button onclick="toggleExpandedPlayer(false)" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <i class="ph-bold ph-caret-down text-2xl"></i>
-            </button>
+            <button onclick="toggleExpandedPlayer(false)" class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="ph-bold ph-caret-down text-2xl"></i></button>
             <div class="text-xs font-bold tracking-widest text-gray-400 uppercase">Now Playing</div>
-            <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition">
-                <i class="ph-bold ph-dots-three text-2xl"></i>
-            </button>
+            <button class="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition"><i class="ph-bold ph-dots-three text-2xl"></i></button>
         </div>
-
-        <!-- Cover Art -->
         <div class="flex-1 flex items-center justify-center p-8">
             <div class="relative w-full max-w-md aspect-square rounded-2xl shadow-2xl overflow-hidden transition-transform duration-500" id="exp-cover-container">
                 <img id="exp-cover" src="https://placehold.co/500x500/eeeeee/cccccc?text=Music" alt="Cover" class="w-full h-full object-cover">
             </div>
         </div>
-
-        <!-- Controls Section -->
         <div class="px-8 pb-12 max-w-md w-full mx-auto">
             <div class="flex justify-between items-end mb-6">
                 <div class="overflow-hidden pr-4">
@@ -333,28 +219,22 @@
                     <p class="text-lg text-brand truncate" id="exp-artist">--</p>
                 </div>
             </div>
-
-            <!-- Scrubber -->
             <div class="mb-8">
-                <input type="range" id="seek-bar" value="0" min="0" max="100" class="w-full" oninput="seekAudio()">
+                <input type="range" id="seek-bar" value="0" min="0" max="100" class="w-full" oninput="seekAudio()" onchange="confirmSeek()">
                 <div class="flex justify-between text-xs text-gray-500 mt-2 font-medium">
                     <span id="time-current">0:00</span>
                     <span id="time-duration">-:--</span>
                 </div>
             </div>
-
-            <!-- Buttons -->
             <div class="flex justify-between items-center mb-8">
                 <button class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition"><i class="ph-bold ph-shuffle text-xl"></i></button>
                 <div class="flex items-center gap-6">
                     <button onclick="playPrev()" class="text-4xl text-gray-900 dark:text-white hover:opacity-70 transition"><i class="ph-fill ph-skip-back"></i></button>
-                    <button onclick="togglePlay()" class="text-6xl text-gray-900 dark:text-white hover:scale-105 transition"><i id="exp-play-btn" class="ph-fill ph-play-circle"></i></button>
+                    <button onclick="togglePlay()" class="text-6xl text-gray-900 dark:text-white active:scale-95 transition"><i id="exp-play-btn" class="ph-fill ph-play-circle"></i></button>
                     <button onclick="playNext()" class="text-4xl text-gray-900 dark:text-white hover:opacity-70 transition"><i class="ph-fill ph-skip-forward"></i></button>
                 </div>
                 <button class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition"><i class="ph-bold ph-repeat text-xl"></i></button>
             </div>
-
-            <!-- Volume -->
             <div class="flex items-center gap-3 text-gray-400">
                 <i class="ph-fill ph-speaker-low text-lg"></i>
                 <input type="range" id="volume-bar" value="100" min="0" max="100" class="flex-1" oninput="changeVolume()">
@@ -362,110 +242,40 @@
             </div>
         </div>
     </div>
-
-    <!-- Song Editor Modal -->
-    <div id="modal-song" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm hidden items-center justify-center p-4">
-        <div class="bg-white dark:bg-darksurface w-full max-w-2xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="p-4 border-b border-gray-100 dark:border-gray-800 flex justify-between items-center bg-gray-50 dark:bg-gray-900">
-                <h3 class="font-bold text-lg" id="modal-title">Add Song</h3>
-                <button onclick="closeSongModal()" class="text-gray-500 hover:bg-gray-200 dark:hover:bg-gray-800 p-1 rounded-full"><i class="ph-bold ph-x text-xl"></i></button>
-            </div>
-            
-            <div class="p-6 overflow-y-auto flex-1 hide-scrollbar">
-                <form id="song-form" class="space-y-4">
-                    <input type="hidden" id="form-id">
-                    
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="col-span-2 md:col-span-1 space-y-1">
-                            <label class="text-xs font-medium text-gray-500">Title</label>
-                            <input type="text" id="form-title" required class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                        </div>
-                        <div class="col-span-2 md:col-span-1 space-y-1">
-                            <label class="text-xs font-medium text-gray-500">Artist</label>
-                            <input type="text" id="form-artist" required class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                        </div>
-                        <div class="space-y-1">
-                            <label class="text-xs font-medium text-gray-500">Album</label>
-                            <input type="text" id="form-album" class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                        </div>
-                        <div class="grid grid-cols-2 gap-2">
-                            <div class="space-y-1">
-                                <label class="text-xs font-medium text-gray-500">Key</label>
-                                <input type="text" id="form-key" class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                            </div>
-                            <div class="space-y-1">
-                                <label class="text-xs font-medium text-gray-500">BPM</label>
-                                <input type="number" id="form-tempo" class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                            </div>
-                        </div>
-                        <div class="col-span-2 space-y-1">
-                            <label class="text-xs font-medium text-gray-500">Cover Image URL (Optional)</label>
-                            <input type="url" id="form-cover" placeholder="https://..." class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none">
-                        </div>
-                        
-                        <div class="col-span-2 space-y-1 mt-4">
-                            <label class="text-xs font-medium text-gray-500">Lyrics & Chords</label>
-                            <p class="text-[10px] text-gray-400 mb-2">Use brackets for chords, e.g., <code>[G]Amazing [C]Grace</code></p>
-                            <textarea id="form-content" rows="8" class="w-full px-3 py-2 bg-gray-100 dark:bg-gray-800 border-none rounded-lg focus:ring-2 focus:ring-brand outline-none font-mono text-sm"></textarea>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            
-            <div class="p-4 border-t border-gray-100 dark:border-gray-800 flex justify-end gap-3 bg-gray-50 dark:bg-gray-900">
-                <button onclick="closeSongModal()" class="px-4 py-2 rounded-lg font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800">Cancel</button>
-                <button onclick="saveSong()" class="px-4 py-2 rounded-lg font-medium bg-brand text-white shadow-md hover:bg-opacity-90">Save Song</button>
+<!-- ផ្ទាំងបង្កើត Album ថ្មី (Custom Modal) -->
+    <div id="modal-album" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
+        <div class="bg-white dark:bg-darksurface w-full max-w-sm rounded-2xl shadow-2xl p-6">
+            <h3 class="font-bold text-xl mb-4 text-gray-900 dark:text-white">New Album</h3>
+            <input type="text" id="new-album-name" placeholder="Enter Album Name" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-800 border-none rounded-xl focus:ring-2 focus:ring-brand outline-none mb-6 text-gray-900 dark:text-white">
+            <div class="flex justify-end gap-3">
+                <button onclick="closeAlbumModal()" class="px-5 py-2.5 rounded-xl font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-800 transition">Cancel</button>
+                <button onclick="saveNewAlbum()" class="px-5 py-2.5 rounded-xl font-medium bg-brand text-white shadow-md active:scale-95 transition">Create</button>
             </div>
         </div>
     </div>
-
-    <!-- HTML5 Audio Element -->
     <audio id="audio-player"></audio>
 
     <script>
-        // --- Mock Data & State ---
-        const initialMockData = [
-            {
-                id: '1', title: 'Amazing Grace', artist: 'Traditional', album: 'Hymns', key: 'G', tempo: 72,
-                cover: 'https://placehold.co/500x500/2c3e50/ffffff?text=Hymns',
-                content: "[G]Amazing grace how [C]sweet the [G]sound\nThat saved a wretch like [D]me\nI [G]once was lost but [C]now am [G]found\nWas [Em]blind but [D]now I [G]see"
-            },
-            {
-                id: '2', title: 'How Great Is Our God', artist: 'Chris Tomlin', album: 'Arriving', key: 'C', tempo: 78,
-                cover: 'https://placehold.co/500x500/fa586a/ffffff?text=Arriving',
-                content: "The [C]splendor of a [Am]King, clothed in majesty\nLet all the [F]earth rejoice\nAll the earth rejoice\n\nHow [C]great is our God, sing with me\nHow [Am]great is our God, and all will see\nHow [F]great, how [G]great is our [C]God"
-            }
-        ];
-
-        let songs = JSON.parse(localStorage.getItem('worshipSongs')) || initialMockData;
+        let songs = [];
+        let customAlbums = [];
+        let currentOpenAlbumId = null;
         let currentView = 'home';
-        let viewHistory = ['home'];
-        
-        // Player State
         let currentPlayingId = null;
         let isPlaying = false;
-        let playInterval = null; // for simulated playback
-        let simProgress = 0; // seconds
+        let isSeeking = false;
+        const audio = document.getElementById('audio-player');
 
-        // --- Init ---
         function init() {
-            // Apply Settings
             const theme = localStorage.getItem('theme');
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
                 document.getElementById('theme-toggle').checked = true;
             }
-            
-            const hideChords = localStorage.getItem('hideChords') === 'true';
-            document.getElementById('chords-toggle').checked = !hideChords;
-            if(hideChords) document.body.classList.add('hide-chords');
-
             renderHome();
             setupAudioEvents();
         }
 
-        // --- Navigation ---
-        function navTo(view, pushHistory = true) {
+        function navTo(view) {
             document.querySelectorAll('.view-section').forEach(el => {
                 el.classList.add('hidden');
                 el.classList.remove('block');
@@ -473,70 +283,88 @@
             document.getElementById(`view-${view}`).classList.remove('hidden');
             document.getElementById(`view-${view}`).classList.add('block');
             
-            // Update Active Nav
-            if(['home','songs','albums','settings'].includes(view)) {
-                document.querySelectorAll('.nav-item').forEach(el => {
-                    el.classList.remove('text-brand', 'bg-gray-200', 'dark:bg-gray-800');
-                    const icon = el.querySelector('i');
-                    icon.classList.replace('ph-fill', 'ph');
-                });
-                
-                const activeNav = document.getElementById(`nav-${view}`);
-                if(activeNav) {
-                    activeNav.classList.add('text-brand', 'bg-gray-200', 'dark:bg-gray-800');
-                    activeNav.querySelector('i').classList.replace('ph', 'ph-fill');
-                }
-
-                // Mobile
-                document.querySelectorAll('.nav-item-mob').forEach(el => {
-                    el.classList.remove('text-brand');
-                    el.classList.add('text-gray-400');
-                    el.querySelector('i').classList.replace('ph-fill', 'ph');
-                });
-                const mobIndex = ['home','songs','albums','settings'].indexOf(view);
-                if(mobIndex >= 0) {
-                    const mobEl = document.querySelectorAll('.nav-item-mob')[mobIndex];
-                    mobEl.classList.remove('text-gray-400');
-                    mobEl.classList.add('text-brand');
-                    mobEl.querySelector('i').classList.replace('ph', 'ph-fill');
-                }
+            document.querySelectorAll('.nav-item-mob').forEach(el => {
+                el.classList.remove('text-brand');
+                el.classList.add('text-gray-400');
+                el.querySelector('i').classList.replace('ph-fill', 'ph');
+            });
+            
+            const activeTabName = view === 'album-detail' ? 'albums' : view;
+            const mobIndex = ['home','songs','albums','settings'].indexOf(activeTabName);
+            if(mobIndex >= 0) {
+                const mobEl = document.querySelectorAll('.nav-item-mob')[mobIndex];
+                mobEl.classList.remove('text-gray-400');
+                mobEl.classList.add('text-brand');
+                mobEl.querySelector('i').classList.replace('ph', 'ph-fill');
             }
 
+            currentView = view;
             if(view === 'home') renderHome();
             if(view === 'songs') renderSongs();
             if(view === 'albums') renderAlbums();
             
-            if(pushHistory && view !== viewHistory[viewHistory.length-1]) {
-                viewHistory.push(view);
-            }
             document.getElementById('main-content').scrollTop = 0;
         }
 
-        function navBack() {
-            if(viewHistory.length > 1) {
-                viewHistory.pop();
-                navTo(viewHistory[viewHistory.length-1], false);
-            } else {
-                navTo('home');
+        function importSongs(event) {
+            const files = event.target.files;
+            if(!files || files.length === 0) return;
+
+            for(let file of files) {
+                const url = URL.createObjectURL(file);
+                const title = file.name.replace(/\.[^/.]+$/, "");
+                const newSong = {
+                    id: Date.now().toString() + Math.floor(Math.random()*1000),
+                    title: title,
+                    artist: 'Local Device',
+                    album: 'My Playlist',
+                    cover: 'https://placehold.co/500x500/fa586a/ffffff?text=' + encodeURIComponent(title.charAt(0).toUpperCase()),
+                    url: url
+                };
+                if(!songs.find(s => s.title === title)) songs.push(newSong);
             }
+            
+            if(currentView === 'home') renderHome();
+            if(currentView === 'songs') renderSongs();
+            if(currentView === 'albums') renderAlbums();
+            event.target.value = "";
         }
 
-        // --- Rendering ---
-        function getCover(song) {
-            return song.cover || `https://placehold.co/500x500/333333/ffffff?text=${encodeURIComponent(song.title.charAt(0))}`;
-        }
-
-        function renderHome() {
+       function renderHome() {
             const grid = document.getElementById('home-recent-grid');
+            const emptyState = document.getElementById('home-empty-state');
+            const actions = document.getElementById('home-actions');
+            const recentTitle = document.getElementById('recent-title');
+            const greeting = document.getElementById('home-greeting');
+            const subtitle = document.getElementById('home-subtitle');
+            
+            const hour = new Date().getHours();
+            if (hour < 12) greeting.textContent = 'Good Morning';
+            else if (hour < 18) greeting.textContent = 'Good Afternoon';
+            else greeting.textContent = 'Good Evening';
+
             grid.innerHTML = '';
-            // Show last 5
-            songs.slice().reverse().slice(0, 5).forEach(song => {
+            
+            if(songs.length === 0) {
+                emptyState.style.display = 'flex';
+                actions.style.display = 'none';
+                recentTitle.style.display = 'none';
+                subtitle.textContent = 'Import music to get started';
+                return;
+            }
+            
+            emptyState.style.display = 'none';
+            actions.style.display = 'flex';
+            recentTitle.style.display = 'block';
+            subtitle.textContent = `${songs.length} song(s) in your library`;
+
+            songs.slice().reverse().slice(0, 4).forEach(song => {
                 grid.innerHTML += `
-                    <div class="group cursor-pointer" onclick="viewSong('${song.id}')">
-                        <div class="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-lg transition-all">
-                            <img src="${getCover(song)}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
-                            <div class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-2">
-                                <button onclick="playSong('${song.id}', event)" class="bg-brand text-white p-2 rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform"><i class="ph-fill ph-play"></i></button>
+                    <div class="group cursor-pointer" onclick="playSong('${song.id}')">
+                        <div class="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md active:scale-95 transition-all bg-gray-200 dark:bg-gray-800">
+                            <img src="${song.cover}" class="w-full h-full object-cover">
+                            <div class="absolute inset-0 bg-black/20 flex items-end p-2">
+                                <div class="bg-brand text-white p-2 rounded-full shadow-lg"><i class="ph-fill ph-play"></i></div>
                             </div>
                         </div>
                         <div class="font-medium truncate text-sm">${song.title}</div>
@@ -546,309 +374,233 @@
             });
         }
 
+        function shuffleAll() {
+            if (songs.length === 0) return;
+            const randomIndex = Math.floor(Math.random() * songs.length);
+            playSong(songs[randomIndex].id);
+        }
+
+        function playLatest() {
+            if (songs.length === 0) return;
+            playSong(songs[songs.length - 1].id);
+        }
+
         function renderSongs() {
             const list = document.getElementById('songs-list');
             list.innerHTML = '';
             
-            // Sort alphabetical
-            const sorted = [...songs].sort((a,b) => a.title.localeCompare(b.title));
+            if(songs.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-400 py-10 text-sm">No songs added. Tap Import to add music from your phone.</div>';
+                return;
+            }
             
+            const sorted = [...songs].sort((a,b) => a.title.localeCompare(b.title));
             sorted.forEach(song => {
+                const isPlayingUI = currentPlayingId === song.id ? 'text-brand' : 'text-gray-900 dark:text-white';
                 list.innerHTML += `
-                    <div class="flex items-center justify-between p-3 hover:bg-white dark:hover:bg-gray-800 rounded-xl transition cursor-pointer group border border-transparent hover:border-gray-100 dark:hover:border-gray-700 shadow-sm hover:shadow" onclick="viewSong('${song.id}')">
-                        <div class="flex items-center gap-4">
+                    <div class="flex items-center justify-between p-3 rounded-xl active:bg-gray-200 dark:active:bg-gray-800 transition cursor-pointer group" onclick="playSong('${song.id}')">
+                        <div class="flex items-center gap-4 overflow-hidden">
                             <div class="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
-                                <img src="${getCover(song)}" class="w-full h-full object-cover">
-                                <div class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity" onclick="playSong('${song.id}', event)">
-                                    <i class="ph-fill ph-play text-white text-xl"></i>
-                                </div>
+                                <img src="${song.cover}" class="w-full h-full object-cover">
                             </div>
-                            <div>
-                                <div class="font-medium text-gray-900 dark:text-white">${song.title}</div>
-                                <div class="text-sm text-gray-500">${song.artist} ${song.album ? '• ' + song.album : ''}</div>
+                            <div class="truncate">
+                                <div class="font-medium truncate ${isPlayingUI}">${song.title}</div>
+                                <div class="text-sm text-gray-500 truncate">${song.artist}</div>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button onclick="editSong('${song.id}', event)" class="p-2 text-gray-400 hover:text-brand transition"><i class="ph ph-pencil-simple"></i></button>
-                            <button onclick="deleteSong('${song.id}', event)" class="p-2 text-gray-400 hover:text-red-500 transition"><i class="ph ph-trash"></i></button>
-                        </div>
+                        <button onclick="removeSong('${song.id}', event)" class="p-2 text-gray-400 active:text-red-500"><i class="ph ph-trash"></i></button>
                     </div>
                 `;
             });
+        }
+
+        // បើកផ្ទាំងបង្កើត Album 
+        function promptCreateAlbum() {
+            document.getElementById('new-album-name').value = '';
+            document.getElementById('modal-album').classList.remove('hidden');
+            document.getElementById('modal-album').classList.add('flex');
+            setTimeout(() => document.getElementById('new-album-name').focus(), 100);
+        }
+        
+        // បិទផ្ទាំងបង្កើត Album
+        function closeAlbumModal() {
+            document.getElementById('modal-album').classList.add('hidden');
+            document.getElementById('modal-album').classList.remove('flex');
+        }
+        
+        // រក្សាទុក Album ថ្មី
+        function saveNewAlbum() {
+            const name = document.getElementById('new-album-name').value;
+            if(name && name.trim() !== "") {
+                const newAlbum = {
+                    id: 'album_' + Date.now(),
+                    title: name.trim(),
+                    cover: 'https://placehold.co/500x500/e5e7eb/6b7280?text=' + encodeURIComponent(name.trim().charAt(0).toUpperCase())
+                };
+                customAlbums.push(newAlbum);
+                renderAlbums();
+                closeAlbumModal();
+            }
         }
 
         function renderAlbums() {
             const grid = document.getElementById('albums-grid');
             grid.innerHTML = '';
             
-            const albums = {};
-            songs.forEach(s => {
-                const alb = s.album || 'Unknown Album';
-                if(!albums[alb]) albums[alb] = { title: alb, artist: s.artist, cover: getCover(s), count: 0 };
-                albums[alb].count++;
-            });
+            if(customAlbums.length === 0) {
+                grid.innerHTML = '<div class="col-span-2 text-center text-gray-400 py-10 text-sm">មិនទាន់មាន Album ទេ។ ចុច New Album ដើម្បីបង្កើត។</div>';
+                return;
+            }
+            
+            customAlbums.forEach(album => {
+                const songCount = songs.filter(s => s.albumId === album.id).length;
+                const firstSong = songs.find(s => s.albumId === album.id);
+                const displayCover = firstSong ? firstSong.cover : album.cover;
 
-            Object.values(albums).forEach(album => {
                 grid.innerHTML += `
-                    <div class="group cursor-pointer">
-                        <div class="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md group-hover:shadow-lg transition-all">
-                            <img src="${album.cover}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+                    <div class="group cursor-pointer" onclick="openAlbum('${album.id}')">
+                        <div class="relative aspect-square rounded-xl overflow-hidden mb-3 shadow-md active:scale-95 transition-transform bg-gray-200 dark:bg-gray-800">
+                            <img src="${displayCover}" class="w-full h-full object-cover">
                         </div>
-                        <div class="font-medium truncate text-sm">${album.title}</div>
-                        <div class="text-xs text-gray-500 truncate">${album.artist} • ${album.count} song(s)</div>
+                        <div class="font-medium truncate text-sm text-gray-900 dark:text-white">${album.title}</div>
+                        <div class="text-xs text-gray-500 truncate">${songCount} song(s)</div>
                     </div>
                 `;
             });
         }
 
-        // --- Chord Rendering Engine ---
-        function parseChords(content) {
-            const lines = content.split('\n');
-            let html = '';
-            
-            lines.forEach(line => {
-                if (line.trim() === '') {
-                    html += '<div class="h-4"></div>'; // Empty line spacing
-                    return;
-                }
-                
-                // Process line with regex to find [Chord]Lyric patterns
-                // Match literal [ then anything then ] then any characters until next [ or end
-                const regex = /\[(.*?)\]([^\[]*)/g;
-                let lineHtml = '';
-                let lastIndex = 0;
-                let match;
-                let hasChords = false;
-
-                // Check if line starts with text before any chord
-                const firstBracket = line.indexOf('[');
-                if (firstBracket > 0) {
-                    lineHtml += `<div class="chord-group"><span class="chord-name"></span><span class="lyric-text">${line.substring(0, firstBracket).replace(/ /g, '&nbsp;')}</span></div>`;
-                } else if (firstBracket === -1) {
-                    // No chords in line
-                    html += `<div class="chord-line mt-2"><div class="chord-group"><span class="chord-name"></span><span class="lyric-text">${line.replace(/ /g, '&nbsp;')}</span></div></div>`;
-                    return;
-                }
-
-                while ((match = regex.exec(line)) !== null) {
-                    hasChords = true;
-                    const chord = match[1];
-                    let text = match[2];
-                    
-                    // Keep spaces by replacing with &nbsp; except trailing which might mess up wrapping slightly, but ensures alignment
-                    text = text.replace(/ /g, '&nbsp;');
-                    if(text === '') text = '&nbsp;'; // Ensure chord has space to sit on if no lyric
-                    
-                    lineHtml += `<div class="chord-group"><span class="chord-name">${chord}</span><span class="lyric-text">${text}</span></div>`;
-                }
-
-                html += `<div class="chord-line">${lineHtml}</div>`;
-            });
-            
-            return html;
+        function openAlbum(albumId) {
+            currentOpenAlbumId = albumId;
+            const album = customAlbums.find(a => a.id === albumId);
+            if(!album) return;
+            document.getElementById('album-detail-title').textContent = album.title;
+            navTo('album-detail');
+            renderAlbumDetail();
         }
 
-        let currentlyViewedSongId = null;
-        function viewSong(id) {
-            const song = songs.find(s => s.id === id);
-            if(!song) return;
+        function renderAlbumDetail() {
+            if(!currentOpenAlbumId) return;
+            const list = document.getElementById('album-songs-list');
+            list.innerHTML = '';
             
-            currentlyViewedSongId = id;
-            document.getElementById('viewer-title').textContent = song.title;
-            document.getElementById('viewer-artist').textContent = song.artist;
-            document.getElementById('viewer-key').textContent = song.key || '--';
-            document.getElementById('viewer-tempo').textContent = song.tempo || '--';
+            const albumSongs = songs.filter(s => s.albumId === currentOpenAlbumId);
             
-            document.getElementById('viewer-content').innerHTML = parseChords(song.content);
-            
-            navTo('lyrics');
-        }
-
-        function playCurrentViewedSong() {
-            if(currentlyViewedSongId) {
-                playSong(currentlyViewedSongId);
-            }
-        }
-
-        // --- Song CRUD ---
-        function openSongModal() {
-            document.getElementById('song-form').reset();
-            document.getElementById('form-id').value = '';
-            document.getElementById('modal-title').textContent = 'Add Song';
-            document.getElementById('modal-song').classList.remove('hidden');
-            document.getElementById('modal-song').classList.add('flex');
-        }
-        
-        function closeSongModal() {
-            document.getElementById('modal-song').classList.add('hidden');
-            document.getElementById('modal-song').classList.remove('flex');
-        }
-
-        function editSong(id, e) {
-            if(e) e.stopPropagation();
-            const song = songs.find(s => s.id === id);
-            if(!song) return;
-            
-            document.getElementById('form-id').value = song.id;
-            document.getElementById('form-title').value = song.title;
-            document.getElementById('form-artist').value = song.artist;
-            document.getElementById('form-album').value = song.album || '';
-            document.getElementById('form-key').value = song.key || '';
-            document.getElementById('form-tempo').value = song.tempo || '';
-            document.getElementById('form-cover').value = song.cover || '';
-            document.getElementById('form-content').value = song.content || '';
-            
-            document.getElementById('modal-title').textContent = 'Edit Song';
-            document.getElementById('modal-song').classList.remove('hidden');
-            document.getElementById('modal-song').classList.add('flex');
-        }
-
-        function editCurrentSong() {
-            if(currentlyViewedSongId) editSong(currentlyViewedSongId);
-        }
-
-        function saveSong() {
-            const form = document.getElementById('song-form');
-            if(!form.checkValidity()) {
-                form.reportValidity();
+            if(albumSongs.length === 0) {
+                list.innerHTML = '<div class="text-center text-gray-400 py-10 text-sm">Album នេះទទេរស្អាត។ ចុច Import ដើម្បីបញ្ចូលបទចម្រៀង។</div>';
                 return;
             }
-
-            const id = document.getElementById('form-id').value || Date.now().toString();
-            const song = {
-                id: id,
-                title: document.getElementById('form-title').value,
-                artist: document.getElementById('form-artist').value,
-                album: document.getElementById('form-album').value,
-                key: document.getElementById('form-key').value,
-                tempo: document.getElementById('form-tempo').value,
-                cover: document.getElementById('form-cover').value,
-                content: document.getElementById('form-content').value
-            };
-
-            const existingIndex = songs.findIndex(s => s.id === id);
-            if(existingIndex >= 0) {
-                songs[existingIndex] = song;
-            } else {
-                songs.push(song);
-            }
-
-            localStorage.setItem('worshipSongs', JSON.stringify(songs));
-            closeSongModal();
             
-            // Refresh views
+            albumSongs.forEach(song => {
+                const isPlayingUI = currentPlayingId === song.id ? 'text-brand' : 'text-gray-900 dark:text-white';
+                list.innerHTML += `
+                    <div class="flex items-center justify-between p-3 rounded-xl active:bg-gray-200 dark:active:bg-gray-800 transition cursor-pointer group" onclick="playSong('${song.id}')">
+                        <div class="flex items-center gap-4 overflow-hidden">
+                            <div class="relative w-12 h-12 rounded-md overflow-hidden shrink-0">
+                                <img src="${song.cover}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="truncate">
+                                <div class="font-medium truncate ${isPlayingUI}">${song.title}</div>
+                                <div class="text-sm text-gray-500 truncate">${song.artist}</div>
+                            </div>
+                        </div>
+                        <button onclick="removeSong('${song.id}', event); renderAlbumDetail();" class="p-2 text-gray-400 active:text-red-500"><i class="ph ph-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+
+        function importToCurrentAlbum(event) {
+            const files = event.target.files;
+            if(!files || files.length === 0 || !currentOpenAlbumId) return;
+            
+            const currentAlbum = customAlbums.find(a => a.id === currentOpenAlbumId);
+            for(let file of files) {
+                const url = URL.createObjectURL(file);
+                const title = file.name.replace(/\.[^/.]+$/, "");
+                const newSong = {
+                    id: Date.now().toString() + Math.floor(Math.random()*1000),
+                    title: title,
+                    artist: 'Local Device',
+                    album: currentAlbum.title,
+                    albumId: currentOpenAlbumId,
+                    cover: 'https://placehold.co/500x500/fa586a/ffffff?text=' + encodeURIComponent(title.charAt(0).toUpperCase()),
+                    url: url
+                };
+                if(!songs.find(s => s.title === title && s.albumId === currentOpenAlbumId)) {
+                    songs.push(newSong);
+                }
+            }
+            renderAlbumDetail();
+            event.target.value = "";
+        }
+
+        function removeSong(id, e) {
+            if(e) e.stopPropagation();
+            songs = songs.filter(s => s.id !== id);
+            if(currentPlayingId === id) stopPlayback();
             if(currentView === 'home') renderHome();
             if(currentView === 'songs') renderSongs();
             if(currentView === 'albums') renderAlbums();
-            
-            // If editing currently viewed, refresh it
-            if(currentlyViewedSongId === id) viewSong(id);
-        }
-
-        function deleteSong(id, e) {
-            if(e) e.stopPropagation();
-            if(confirm('Are you sure you want to delete this song?')) {
-                songs = songs.filter(s => s.id !== id);
-                localStorage.setItem('worshipSongs', JSON.stringify(songs));
-                if(currentView === 'home') renderHome();
-                if(currentView === 'songs') renderSongs();
-                if(currentView === 'albums') renderAlbums();
-                
-                if(currentlyViewedSongId === id) navBack();
-                if(currentPlayingId === id) stopPlayback();
-            }
         }
 
         function resetData() {
-            if(confirm('This will delete all custom songs and settings. Continue?')) {
-                localStorage.clear();
-                songs = [...initialMockData];
-                localStorage.setItem('worshipSongs', JSON.stringify(songs));
-                location.reload();
+            if(confirm('Clear all imported songs and albums?')) {
+                songs = []; customAlbums = []; stopPlayback();
+                if(currentView === 'home') renderHome();
+                if(currentView === 'songs') renderSongs();
+                if(currentView === 'albums') renderAlbums();
+                if(currentView === 'album-detail') navTo('albums');
             }
         }
 
-        // --- Settings ---
         function toggleTheme() {
             const isDark = document.documentElement.classList.toggle('dark');
             localStorage.setItem('theme', isDark ? 'dark' : 'light');
         }
 
-        function toggleChordsPref() {
-            const checked = document.getElementById('chords-toggle').checked;
-            if(checked) {
-                document.body.classList.remove('hide-chords');
-                localStorage.setItem('hideChords', 'false');
-            } else {
-                document.body.classList.add('hide-chords');
-                localStorage.setItem('hideChords', 'true');
-            }
-        }
-
-        // --- Player Logic ---
         function toggleExpandedPlayer(show) {
             const el = document.getElementById('expanded-player');
-            if(show) {
-                el.classList.remove('player-hidden');
-                el.classList.add('player-visible');
-            } else {
-                el.classList.add('player-hidden');
-                el.classList.remove('player-visible');
-            }
+            if(show) { el.classList.remove('player-hidden'); el.classList.add('player-visible'); } 
+            else { el.classList.add('player-hidden'); el.classList.remove('player-visible'); }
         }
 
-        function playSong(id, e) {
-            if(e) e.stopPropagation();
+        function playSong(id) {
             const song = songs.find(s => s.id === id);
             if(!song) return;
-
             currentPlayingId = id;
             
-            // Update UI
             document.getElementById('mini-title').textContent = song.title;
             document.getElementById('mini-artist').textContent = song.artist;
-            document.getElementById('mini-cover').src = getCover(song);
-            
+            document.getElementById('mini-cover').src = song.cover;
             document.getElementById('exp-title').textContent = song.title;
             document.getElementById('exp-artist').textContent = song.artist;
-            document.getElementById('exp-cover').src = getCover(song);
+            document.getElementById('exp-cover').src = song.cover;
             
-            // Start simulation
-            simProgress = 0;
+            audio.src = song.url;
+            audio.play().catch(e => console.log("Audio play error:", e));
+            
             isPlaying = true;
             updatePlayButtons();
-            
-            clearInterval(playInterval);
-            playInterval = setInterval(updateProgress, 1000);
-            updateProgress(); // initial call
+            if(currentView === 'songs') renderSongs();
         }
 
         function togglePlay() {
-            if(!currentPlayingId) return; // Nothing loaded
-            
-            isPlaying = !isPlaying;
+            if(!currentPlayingId) return;
+            if(audio.paused) { audio.play(); isPlaying = true; } 
+            else { audio.pause(); isPlaying = false; }
             updatePlayButtons();
-            
-            if(isPlaying) {
-                playInterval = setInterval(updateProgress, 1000);
-                document.getElementById('exp-cover-container').classList.remove('scale-90');
-            } else {
-                clearInterval(playInterval);
-                document.getElementById('exp-cover-container').classList.add('scale-90');
-            }
         }
 
         function stopPlayback() {
-            isPlaying = false;
-            currentPlayingId = null;
-            clearInterval(playInterval);
-            
+            audio.pause(); audio.src = ''; isPlaying = false; currentPlayingId = null;
             document.getElementById('mini-title').textContent = 'Not Playing';
             document.getElementById('mini-artist').textContent = '--';
             document.getElementById('exp-title').textContent = 'Not Playing';
             document.getElementById('exp-artist').textContent = '--';
             document.getElementById('mini-progress').style.width = '0%';
             document.getElementById('seek-bar').value = 0;
+            document.getElementById('time-current').textContent = '0:00';
+            document.getElementById('time-duration').textContent = '-:--';
             updatePlayButtons();
         }
 
@@ -868,72 +620,57 @@
             }
         }
 
-        function updateProgress() {
-            if(!isPlaying) return;
-            // Simulate 4 minute song (240s)
-            const duration = 240; 
-            simProgress += 1;
-            
-            if(simProgress > duration) {
-                playNext();
-                return;
-            }
-            
-            const perc = (simProgress / duration) * 100;
-            
-            // Update UI
-            document.getElementById('mini-progress').style.width = `${perc}%`;
-            document.getElementById('seek-bar').value = perc;
-            
-            // Time strings
-            const mins = Math.floor(simProgress / 60);
-            const secs = Math.floor(simProgress % 60).toString().padStart(2, '0');
-            document.getElementById('time-current').textContent = `${mins}:${secs}`;
-            document.getElementById('time-duration').textContent = '4:00'; // fixed mock
+        function setupAudioEvents() {
+            audio.addEventListener('timeupdate', () => {
+                if(isSeeking || !audio.duration) return;
+                const perc = (audio.currentTime / audio.duration) * 100;
+                document.getElementById('mini-progress').style.width = `${perc}%`;
+                document.getElementById('seek-bar').value = perc;
+                document.getElementById('time-current').textContent = formatTime(audio.currentTime);
+                document.getElementById('time-duration').textContent = formatTime(audio.duration);
+            });
+            audio.addEventListener('ended', playNext);
+            audio.addEventListener('play', () => { isPlaying = true; updatePlayButtons(); });
+            audio.addEventListener('pause', () => { isPlaying = false; updatePlayButtons(); });
+        }
+        
+        function formatTime(seconds) {
+            if(isNaN(seconds)) return "0:00";
+            const m = Math.floor(seconds / 60);
+            const s = Math.floor(seconds % 60);
+            return `${m}:${s.toString().padStart(2, '0')}`;
         }
 
         function seekAudio() {
-            if(!currentPlayingId) return;
+            if(!currentPlayingId || !audio.duration) return;
+            isSeeking = true;
             const val = document.getElementById('seek-bar').value;
-            const duration = 240;
-            simProgress = (val / 100) * duration;
+            const seekTime = (val / 100) * audio.duration;
             document.getElementById('mini-progress').style.width = `${val}%`;
-            
-            const mins = Math.floor(simProgress / 60);
-            const secs = Math.floor(simProgress % 60).toString().padStart(2, '0');
-            document.getElementById('time-current').textContent = `${mins}:${secs}`;
+            document.getElementById('time-current').textContent = formatTime(seekTime);
         }
         
-        function changeVolume() {
-            // Simulated volume change
-            const val = document.getElementById('volume-bar').value;
-            // audioEl.volume = val / 100;
+        function confirmSeek() {
+            if(!currentPlayingId || !audio.duration) return;
+            audio.currentTime = (document.getElementById('seek-bar').value / 100) * audio.duration;
+            isSeeking = false;
         }
+        
+        function changeVolume() { audio.volume = document.getElementById('volume-bar').value / 100; }
 
         function playNext() {
             if(!currentPlayingId || songs.length === 0) return;
-            const currentIndex = songs.findIndex(s => s.id === currentPlayingId);
-            const nextIndex = (currentIndex + 1) % songs.length;
-            playSong(songs[nextIndex].id);
+            const idx = songs.findIndex(s => s.id === currentPlayingId);
+            playSong(songs[(idx + 1) % songs.length].id);
         }
 
         function playPrev() {
             if(!currentPlayingId || songs.length === 0) return;
-            const currentIndex = songs.findIndex(s => s.id === currentPlayingId);
-            const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
-            playSong(songs[prevIndex].id);
-        }
-        
-        function setupAudioEvents() {
-            // For actual HTML5 audio integration if real URLs are provided in the future
-            // const audio = document.getElementById('audio-player');
-            // audio.addEventListener('timeupdate', () => {...})
-            // audio.addEventListener('ended', playNext)
+            const idx = songs.findIndex(s => s.id === currentPlayingId);
+            playSong(songs[(idx - 1 + songs.length) % songs.length].id);
         }
 
-        // Initialize App on load
         window.addEventListener('DOMContentLoaded', init);
-
     </script>
 </body>
 </html>
