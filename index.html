@@ -9,7 +9,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+<!-- ភ្ជាប់ Manifest សម្រាប់ Add to Home Screen -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#fa586a">
+    <link rel="apple-touch-icon" href="icon-192.png">
     <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -671,6 +674,16 @@
         }
 
         window.addEventListener('DOMContentLoaded', init);
+    </script>
+    <script>
+        // ចុះឈ្មោះ Service Worker ពេលបើក App
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered', reg))
+                    .catch(err => console.log('Service Worker error', err));
+            });
+        }
     </script>
 </body>
 </html>
