@@ -9,13 +9,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-<!-- ភ្ជាប់ Manifest សម្រាប់ Add to Home Screen -->
+    
+    <!-- ភ្ជាប់ Manifest សម្រាប់ Add to Home Screen -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#fa586a">
     <link rel="apple-touch-icon" href="ICON.png">
+    
     <!-- Tailwind CSS & Phosphor Icons -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- idb-keyval សម្រាប់ផ្ទុកទិន្នន័យ File ចូលទៅ IndexedDB -->
+    <script src="https://cdn.jsdelivr.net/npm/idb-keyval@6/dist/umd.js"></script>
+
     <script>
         tailwind.config = {
             darkMode: 'class',
@@ -109,6 +115,8 @@
                         <i class="ph ph-plus-circle text-lg"></i> Import
                     </button>
                 </div>
+                <!-- Add a loading indicator for processing imports -->
+                <div id="import-loading" class="hidden text-brand text-sm font-medium mb-4 animate-pulse text-center w-full">Processing files... Please wait.</div>
                 <div class="space-y-2" id="songs-list"></div>
             </div>
 
@@ -135,6 +143,7 @@
                         <i class="ph ph-download-simple text-lg"></i> Import
                     </button>
                 </div>
+                <div id="album-import-loading" class="hidden text-brand text-sm font-medium mb-4 animate-pulse text-center w-full">Processing files... Please wait.</div>
                 <div class="space-y-2" id="album-songs-list"></div>
             </div>
 
@@ -245,7 +254,8 @@
             </div>
         </div>
     </div>
-<!-- ផ្ទាំងបង្កើត Album ថ្មី (Custom Modal) -->
+    
+    <!-- ផ្ទាំងបង្កើត Album ថ្មី (Custom Modal) -->
     <div id="modal-album" class="fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm hidden flex-col items-center justify-center p-4">
         <div class="bg-white dark:bg-darksurface w-full max-w-sm rounded-2xl shadow-2xl p-6">
             <h3 class="font-bold text-xl mb-4 text-gray-900 dark:text-white">New Album</h3>
@@ -256,6 +266,7 @@
             </div>
         </div>
     </div>
+    
     <audio id="audio-player"></audio>
 
     <script>
@@ -267,14 +278,42 @@
         let isPlaying = false;
         let isSeeking = false;
         const audio = document.getElementById('audio-player');
+        
+        // --- Persistence Functions Using idb-keyval ---
+        async function loadData() {
+            try {
+                const storedSongs = await idbKeyval.get('worship-songs');
+                const storedAlbums = await idbKeyval.get('worship-albums');
+                if (storedSongs) songs = storedSongs;
+                if (storedAlbums) customAlbums = storedAlbums;
+                console.log("Data loaded from IndexedDB.", songs.length, "songs.");
+            } catch (err) {
+                console.error("Error loading data from IndexedDB", err);
+            }
+            renderHome();
+        }
 
+        async function saveData() {
+            try {
+                await idbKeyval.set('worship-songs', songs);
+                await idbKeyval.set('worship-albums', customAlbums);
+            } catch (err) {
+                console.error("Error saving data to IndexedDB", err);
+            }
+        }
+        
+        function getBlobUrl(blob) {
+            return URL.createObjectURL(blob);
+        }
+
+        // --- Init ---
         function init() {
             const theme = localStorage.getItem('theme');
             if (theme === 'dark') {
                 document.documentElement.classList.add('dark');
                 document.getElementById('theme-toggle').checked = true;
             }
-            renderHome();
+            loadData();
             setupAudioEvents();
         }
 
@@ -309,12 +348,14 @@
             document.getElementById('main-content').scrollTop = 0;
         }
 
-        function importSongs(event) {
+        // Modified Import function to read as File/Blob to store in IndexedDB
+        async function importSongs(event) {
             const files = event.target.files;
             if(!files || files.length === 0) return;
+            
+            document.getElementById('import-loading').classList.remove('hidden');
 
             for(let file of files) {
-                const url = URL.createObjectURL(file);
                 const title = file.name.replace(/\.[^/.]+$/, "");
                 const newSong = {
                     id: Date.now().toString() + Math.floor(Math.random()*1000),
@@ -322,14 +363,45 @@
                     artist: 'Local Device',
                     album: 'My Playlist',
                     cover: 'https://placehold.co/500x500/fa586a/ffffff?text=' + encodeURIComponent(title.charAt(0).toUpperCase()),
-                    url: url
+                    blob: file // Store the actual file object (Blob)
                 };
                 if(!songs.find(s => s.title === title)) songs.push(newSong);
             }
             
+            await saveData();
+            document.getElementById('import-loading').classList.add('hidden');
+            
             if(currentView === 'home') renderHome();
             if(currentView === 'songs') renderSongs();
             if(currentView === 'albums') renderAlbums();
+            event.target.value = "";
+        }
+
+        async function importToCurrentAlbum(event) {
+            const files = event.target.files;
+            if(!files || files.length === 0 || !currentOpenAlbumId) return;
+            
+            document.getElementById('album-import-loading').classList.remove('hidden');
+            
+            const currentAlbum = customAlbums.find(a => a.id === currentOpenAlbumId);
+            for(let file of files) {
+                const title = file.name.replace(/\.[^/.]+$/, "");
+                const newSong = {
+                    id: Date.now().toString() + Math.floor(Math.random()*1000),
+                    title: title,
+                    artist: 'Local Device',
+                    album: currentAlbum.title,
+                    albumId: currentOpenAlbumId,
+                    cover: 'https://placehold.co/500x500/fa586a/ffffff?text=' + encodeURIComponent(title.charAt(0).toUpperCase()),
+                    blob: file // Store the actual file object
+                };
+                if(!songs.find(s => s.title === title && s.albumId === currentOpenAlbumId)) {
+                    songs.push(newSong);
+                }
+            }
+            await saveData();
+            document.getElementById('album-import-loading').classList.add('hidden');
+            renderAlbumDetail();
             event.target.value = "";
         }
 
@@ -417,7 +489,6 @@
             });
         }
 
-        // បើកផ្ទាំងបង្កើត Album 
         function promptCreateAlbum() {
             document.getElementById('new-album-name').value = '';
             document.getElementById('modal-album').classList.remove('hidden');
@@ -425,14 +496,12 @@
             setTimeout(() => document.getElementById('new-album-name').focus(), 100);
         }
         
-        // បិទផ្ទាំងបង្កើត Album
         function closeAlbumModal() {
             document.getElementById('modal-album').classList.add('hidden');
             document.getElementById('modal-album').classList.remove('flex');
         }
         
-        // រក្សាទុក Album ថ្មី
-        function saveNewAlbum() {
+        async function saveNewAlbum() {
             const name = document.getElementById('new-album-name').value;
             if(name && name.trim() !== "") {
                 const newAlbum = {
@@ -441,6 +510,7 @@
                     cover: 'https://placehold.co/500x500/e5e7eb/6b7280?text=' + encodeURIComponent(name.trim().charAt(0).toUpperCase())
                 };
                 customAlbums.push(newAlbum);
+                await saveData();
                 renderAlbums();
                 closeAlbumModal();
             }
@@ -512,43 +582,23 @@
             });
         }
 
-        function importToCurrentAlbum(event) {
-            const files = event.target.files;
-            if(!files || files.length === 0 || !currentOpenAlbumId) return;
-            
-            const currentAlbum = customAlbums.find(a => a.id === currentOpenAlbumId);
-            for(let file of files) {
-                const url = URL.createObjectURL(file);
-                const title = file.name.replace(/\.[^/.]+$/, "");
-                const newSong = {
-                    id: Date.now().toString() + Math.floor(Math.random()*1000),
-                    title: title,
-                    artist: 'Local Device',
-                    album: currentAlbum.title,
-                    albumId: currentOpenAlbumId,
-                    cover: 'https://placehold.co/500x500/fa586a/ffffff?text=' + encodeURIComponent(title.charAt(0).toUpperCase()),
-                    url: url
-                };
-                if(!songs.find(s => s.title === title && s.albumId === currentOpenAlbumId)) {
-                    songs.push(newSong);
-                }
-            }
-            renderAlbumDetail();
-            event.target.value = "";
-        }
-
-        function removeSong(id, e) {
+        async function removeSong(id, e) {
             if(e) e.stopPropagation();
             songs = songs.filter(s => s.id !== id);
+            await saveData();
+            
             if(currentPlayingId === id) stopPlayback();
             if(currentView === 'home') renderHome();
             if(currentView === 'songs') renderSongs();
             if(currentView === 'albums') renderAlbums();
         }
 
-        function resetData() {
+        async function resetData() {
             if(confirm('Clear all imported songs and albums?')) {
-                songs = []; customAlbums = []; stopPlayback();
+                songs = []; 
+                customAlbums = []; 
+                await idbKeyval.clear(); // Clear database
+                stopPlayback();
                 if(currentView === 'home') renderHome();
                 if(currentView === 'songs') renderSongs();
                 if(currentView === 'albums') renderAlbums();
@@ -567,6 +617,8 @@
             else { el.classList.add('player-hidden'); el.classList.remove('player-visible'); }
         }
 
+        let currentObjectURL = null;
+
         function playSong(id) {
             const song = songs.find(s => s.id === id);
             if(!song) return;
@@ -579,12 +631,20 @@
             document.getElementById('exp-artist').textContent = song.artist;
             document.getElementById('exp-cover').src = song.cover;
             
-            audio.src = song.url;
+            // Clean up old object URL to free memory
+            if(currentObjectURL) {
+                URL.revokeObjectURL(currentObjectURL);
+            }
+            
+            // Generate a fresh ObjectURL from the Blob right before playing
+            currentObjectURL = URL.createObjectURL(song.blob);
+            audio.src = currentObjectURL;
             audio.play().catch(e => console.log("Audio play error:", e));
             
             isPlaying = true;
             updatePlayButtons();
             if(currentView === 'songs') renderSongs();
+            if(currentView === 'album-detail') renderAlbumDetail();
         }
 
         function togglePlay() {
@@ -595,7 +655,12 @@
         }
 
         function stopPlayback() {
-            audio.pause(); audio.src = ''; isPlaying = false; currentPlayingId = null;
+            audio.pause(); 
+            audio.src = ''; 
+            isPlaying = false; 
+            currentPlayingId = null;
+            if(currentObjectURL) URL.revokeObjectURL(currentObjectURL);
+            
             document.getElementById('mini-title').textContent = 'Not Playing';
             document.getElementById('mini-artist').textContent = '--';
             document.getElementById('exp-title').textContent = 'Not Playing';
@@ -663,14 +728,27 @@
 
         function playNext() {
             if(!currentPlayingId || songs.length === 0) return;
-            const idx = songs.findIndex(s => s.id === currentPlayingId);
-            playSong(songs[(idx + 1) % songs.length].id);
+            // Only play songs that are in the current view (Album or All)
+            let currentList = songs;
+            if (currentView === 'album-detail' && currentOpenAlbumId) {
+                currentList = songs.filter(s => s.albumId === currentOpenAlbumId);
+            }
+            if(currentList.length === 0) return;
+            
+            const idx = currentList.findIndex(s => s.id === currentPlayingId);
+            playSong(currentList[(idx + 1) % currentList.length].id);
         }
 
         function playPrev() {
             if(!currentPlayingId || songs.length === 0) return;
-            const idx = songs.findIndex(s => s.id === currentPlayingId);
-            playSong(songs[(idx - 1 + songs.length) % songs.length].id);
+            let currentList = songs;
+            if (currentView === 'album-detail' && currentOpenAlbumId) {
+                currentList = songs.filter(s => s.albumId === currentOpenAlbumId);
+            }
+            if(currentList.length === 0) return;
+            
+            const idx = currentList.findIndex(s => s.id === currentPlayingId);
+            playSong(currentList[(idx - 1 + currentList.length) % currentList.length].id);
         }
 
         window.addEventListener('DOMContentLoaded', init);
